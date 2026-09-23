@@ -4,7 +4,6 @@ listing:
   contents: posts
   sort: "date desc"
   type: default
-  limit: 5
   categories: false
   sort-ui: false
   filter-ui: false
