@@ -15,7 +15,7 @@ title: "zwb notes · 科研笔记公开站"
 
 ## 📝 最新文章
 
-{{< listing posts>}}
+{{< listing posts.qmd >}}
 
 ## 🔗 找到我
 
