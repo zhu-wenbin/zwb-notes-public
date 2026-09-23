@@ -1,5 +1,13 @@
 ---
-title: "zwb notes · 科研笔记公开站"
+title: "zwb notes · 科研笔记公开层"
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  limit: 5
+  categories: false
+  sort-ui: false
+  filter-ui: false
 ---
 
 # 你好，我是 zwb 👋
@@ -15,11 +23,9 @@ title: "zwb notes · 科研笔记公开站"
 
 ## 📝 最新文章
 
-{{< listing posts.qmd >}}
-
 ## 🔗 找到我
 
-- [GitHub](https://github.com/zhu-wenbin) · [学术主页](https://zhu-wenbin.github.io)
+- [GitHub](https://github.com/zhu-wen-bin) · [学术主页](https://zhu-wenbin.github.io)
 - 私有科研库（本站内容之源）不开源，但方法层全部沉淀在这里
 
 > 本站内容遵循 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh)。
