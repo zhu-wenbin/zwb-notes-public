@@ -1,0 +1,13 @@
+---
+title: "文章"
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+page-navigation: true
+---
+
+## 全部文章 {#全部文章}

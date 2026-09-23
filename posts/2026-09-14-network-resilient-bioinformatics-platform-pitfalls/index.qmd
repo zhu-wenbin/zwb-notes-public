@@ -1,0 +1,115 @@
+---
+title: "中国大陆网络受限环境下的生信平台部署：15 条实战避坑"
+description: "iPHoP NERSC TLS reset、bioconda AWS CDN 墙、VIBRANT 数据源挂掉……在'国际网络极慢或不通'的实验室工作站上搭宏基因组+病毒组双平台的完整避坑清单（2026 实测）。"
+date: 2026-09-14
+categories: [生信部署, 宏基因组, 病毒组]
+license: "CC BY-NC-SA 4.0"
+---
+
+# 背景 {#背景}
+
+我在一台**无法直连国际网络**的实验室工作站（WSL2 Ubuntu）上，从零搭建了细菌宏基因组 + 病毒组双分析平台（step1-8 / step1-11 全流程，含 MetaPhlAn4/HUMAnN3/VirSorter2/CheckV/iPHoP 等）。以下是 15 条用反复失败换来的避坑记录——每一条都经过 2026 年实测验证，非转载。
+
+**适用场景**：中国大陆科研网络、数据不能上云、DB 动辄几十到几百 GB 的本地部署。
+
+## 总原则：三层防御 {#总原则}
+
+```
+第 1 层 镜像替换：conda/pip 全部切国内镜像（清华/中科大）
+第 2 层 渠道替换：GSA 替代 NCBI、VPS 中转替代直连
+第 3 层 物理摆渡：移动硬盘 + 别机下载拷回（终极兜底）
+```
+
+## 15 条避坑清单 {#清单}
+
+### 1. bioconda 的 AWS CDN 是 TLS 级阻断 {#p1}
+
+**症状**：`conda install` 卡在 `Fetching package metadata` 或直接 `SSL_ERROR_SYSCALL`。
+**原因**：bioconda 的 repodata 和包文件托管在 AWS S3/CloudFront——conda 频道配置对了也没用，**CDN 本身被重置**。
+**解法**：
+```bash
+# 必须用清华镜像 + override（否则 conda 仍会去碰官方源）
+conda create -n xxx --override-channels \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda \
+  <package>
+```
+
+### 2. iPHoP 数据库（279G）的 NERSC 源屏蔽所有数据中心 IP {#p2}
+
+**症状**：换任何代理节点、任何 VPS（新加坡 AWS、美国 VPS）下载 `portal.nersc.gov` 全部 `SSL_ERROR_SYSCALL`；直连超时。
+**原因**：NERSC 屏蔽了数据中心 IP 段——**代理出口是 VPS = 也是数据中心 IP**。
+**解法**：只有**学术网络原生 IP**（大学/科研所校园网）能下。方案：校园网机器跑官方 Docker 镜像下载后 `docker save` 拷回；或更省——直接在别机跑 `iphop predict`，只把结果 CSV 拷回来。
+
+### 3. 某些工具 bioconda 装不上不是你的问题 {#p3}
+
+**实测名单**（2026-07）：`iphop`（钉死 biopython=1.79）、`maaslin2`（r-logging 元数据坏）、`SpiecEasi`（源码编译缺依赖）。
+**解法**：每个都写 fallback——MaAsLin2 → 自写 native LM（TSS+LOG+lm+BH，结果可靠）；SpiecEasi → CLR+Pearson。**别死磕 conda，换实现路径**。
+
+### 4. HUMAnN3 大样本必须内建抽样 {#p4}
+
+**症状**：>10M reads 的样本跑 HUMAnN3 几小时不出结果。
+**解法**：流程里内建 `seqkit sample -p 0.12`（降到 ~20M reads）+ `--bypass-translated-search`。要完整 UniRef 层再去掉 bypass（每样本 +1-3h）。
+
+### 5. GSA（国家基因组科学数据中心）是公共数据下载首选 {#p5}
+
+`ngdc.cncb.ac.cn` **国内带宽满速、不需要代理**。流程：优先查 GSA 有没有镜像，再退 NCBI/ENA。ENA 比 NCBI SRA 快，且 `aspera` 可用。
+
+### 6. WSL2 代理要动态探测 Windows 网关 IP {#p6}
+
+WSL2 每次重启 NAT 网关变，写死代理 IP 必挂。
+```bash
+# ~/.wsl_proxy.sh：动态取网关 + no_proxy 国内直连
+export hostip=$(ip route show | grep -i default | awk '{ print $3}')
+export https_proxy="http://${hostip}:7897"
+export no_proxy="localhost,127.0.0.1,mirrors.tuna.tsinghua.edu.cn,ngdc.cncb.ac.cn,..."
+```
+
+### 7. Zenodo/GitHub raw 的 DNS 投毒 {#p7}
+
+直连时 Zenodo 解析到 `0.0.0.0`、GitHub raw 被墙——这是 DNS 层污染，不是网络不通。开代理后正常；国内镜像站加入 `no_proxy` 走直连更快。
+
+### 8. Docker Hub 镜像也要配 {#p8}
+
+`docker pull` 默认走 Docker Hub（被限速）。配国内 registry mirror（如中科大/网易）到 `/etc/docker/daemon.json`。quay.io 例外——它走 AWS，墙同 #1。
+
+### 9. 数据库版本漂移是复现性第一杀手 {#p9}
+
+MetaPhlAn 的 `mpa_vJun23` vs `mpa_vJan25` 结果不可比。**所有 DB 记录：版本号 + 下载日期 + 来源 URL + 大小**，写进 `config.sh` 而不是文档里。
+
+### 10. 换队列不改代码：config.sh 单一配置源 {#p10}
+
+所有路径用 `${PROJECT_DIR}/databases/...` 变量解析。新队列只改 `RAW_DATA_DIR`/`OUTPUT_DIR` 两个变量 + 放好 metadata.tsv。这条让 121 例队列切换只花了 10 分钟。
+
+### 11. 政府站点用 curl 不用 requests {#p11}
+
+**实测**：Python `requests` 对 `gov.cn` 系站点 SSL 握手全部失败，`curl` 正常。爬统计数据（统计局/民航局）时全部改 `subprocess curl`。
+
+### 12. gb2312 编码的隐藏坑 {#p12}
+
+政府网站的目录页/老 HTML 是 **gb2312**——UTF-8 解码**静默乱码**（不报错！），导致表名匹配失败查了半小时。读取时显式指定编码。
+
+### 13. 大 DB 下载用"断点续传 + 状态文件" {#p13}
+
+几百 GB 的库（iPHoP 279G、kraken2 80G）写下载脚本时必须：`aria2c -c`（续传）+ `state.json`（记录进度）。网络抖动是常态，裸 `wget` 等于重来。
+
+### 14. Nextflow 在 Windows 原生不可运行 {#p14}
+
+SIGHUP 限制——WSL2/Linux/Docker 里跑。Windows 侧只做编辑。
+
+### 15. 文档即代码：CLAUDE.md 自维护约定 {#p15}
+
+平台操作手册（CLAUDE.md）约定：**任何环境/DB/坑的变化必须当场写回手册**——新增 conda env、修一个 bug、发现新墙，都写。半年后你会感谢这个约定：15 条避坑全部来自这份手册，而不是记忆。
+
+## 附：我们平台的完整工具矩阵 {#附录}
+
+| 域 | 流程 | 版本锁定策略 |
+|---|---|---|
+| 细菌宏基因组 | step1-8 + MAG（MetaBAT2/CheckM2/GTDB-tk/DRAM） | conda env per step |
+| 病毒组 | step1-11（VirSorter2/VIBRANT/CheckV/PhaGCN2/iPHoP） | 同上 |
+| 下游 R | phyloseq/vegan/DESeq2/ANCOM-BC2 + 自研模块 | virome_R 单环境 |
+| 公共数据 | GSA/SRA/ENA 三路下载 + 队列整合 | sra_dl env |
+
+---
+
+*本文来自我的私有科研库 zwb_data 的方法层，每周自动同步到本站。有问题欢迎开 [Issue](https://github.com/zhu-wen-bin/zwb-notes-public/issues) 讨论。*

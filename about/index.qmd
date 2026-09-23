@@ -1,0 +1,35 @@
+---
+title: "关于"
+---
+
+# 关于本站 {#关于本站}
+
+## 这是什么
+
+我的科研笔记**公开层**。完整的科研库（`zwb_data`，一个 Obsidian vault + git 管理的九课题体系）是私有的；这里发布其中**可公开的方法层**：
+
+- 生信流程的部署经验与避坑（尤其网络受限环境）
+- 自建工具/pipeline 的文档
+- 数据获取与处理的实操笔记
+
+## 为什么公开
+
+1. **这些知识只有沉睡和共享两种状态**——避坑记录在我私有库里就是死资产，发出来就是社区贡献
+2. 网络受限环境（中国大陆科研网络）下的生信部署经验**几乎没人系统写**，而这是真实痛点
+3. 求职名片：未来合作者能直接看到我的方法能力
+
+## 内容原则
+
+- ✅ 发布：方法、流程、工具文档、避坑、公开数据操作
+- ❌ 不发布：未发表数据/结论、临床敏感信息、合作者未同意的内容
+
+## 技术栈
+
+- 源：Obsidian vault（私有）→ 每周自动同步脚本挑选公开层
+- 站：[Quarto](https://quarto.org) 网站，GitHub Actions 渲染，GitHub Pages 托管
+- 许可：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh)
+
+## 联系
+
+- GitHub: [@zhu-wenbin](https://github.com/zhu-wenbin)
+- 学术主页: [zhu-wenbin.github.io](https://zhu-wenbin.github.io)

@@ -1,0 +1,42 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "zwb notes"
+  site-url: https://zhu-wenbin.github.io/zwb-notes-public
+  repo-url: https://github.com/zhu-wenbin/zwb-notes-public
+  repo-actions: [edit, issue]
+  navbar:
+    left:
+      - text: "🏠 首页"
+        file: index.qmd
+      - text: "📝 文章"
+        file: posts.qmd
+      - text: "🧬 课题"
+        file: projects.qmd
+      - text: "ℹ️ 关于"
+        file: about/index.qmd
+    right:
+      - icon: github
+        href: https://github.com/zhu-wenbin
+      - icon: rss
+        href: posts.xml
+  page-footer:
+    center: "© 2026 zwb · 用 Quarto 构建 · RSS 订阅"
+    border: false
+  open-graph: true
+
+format:
+  html:
+    theme: cosmo
+    lang: zh-CN
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    highlight-style: github
+
+editor: visual
+
+execute:
+  freeze: true

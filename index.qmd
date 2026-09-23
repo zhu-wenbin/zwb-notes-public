@@ -1,0 +1,25 @@
+---
+title: "zwb notes · 科研笔记公开站"
+---
+
+# 你好，我是 zwb 👋
+
+中国医科大学临床检验诊断学硕士，艾滋病研究所。这里是我的**科研笔记公开层**——方法、避坑、流程文档的发布站。
+
+## 🧬 我在做什么
+
+- **HIV 分子进化与时空溯源**（CRF01_AE 谱系、BEAST 系统地理学、GLM 驱动因子）
+- **肠道病毒组与宏基因组**（VLP 富集流程、噬菌体-细菌-代谢轴）
+- **三代测序分析**（Nanopore HIV 准种重建、长读长工具 benchmark）
+- **本地生信平台**（网络受限环境下的双平台部署）
+
+## 📝 最新文章
+
+{{< include /posts/_latest.qmd >}}
+
+## 🔗 找到我
+
+- [GitHub](https://github.com/zhu-wenbin) · [学术主页](https://zhu-wenbin.github.io)
+- 私有科研库（本站内容之源）不开源，但方法层全部沉淀在这里
+
+> 本站内容遵循 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh)。
